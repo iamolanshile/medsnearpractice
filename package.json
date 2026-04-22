@@ -1,0 +1,13 @@
+{
+  "name": "medsnear",
+  "version": "1.0.0",
+  "description": "MedsNear — Nigeria drug availability platform",
+  "private": true,
+  "scripts": {
+    "install:backend": "npm install --prefix backend",
+    "install:all": "npm install --prefix backend",
+    "dev:backend": "npm run dev --prefix backend",
+    "start:backend": "npm run start --prefix backend",
+    "setup": "npm run install:all"
+  }
+}

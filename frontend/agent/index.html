@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedsNear — Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "on-secondary":"#ffffff","secondary-fixed":"#d6e3ff","surface-container-high":"#e8e8ea",
+          "surface-variant":"#e2e2e5","on-secondary-fixed":"#021b3c","on-error-container":"#93000a",
+          "primary-fixed":"#d6e3ff","surface-tint":"#005db6","outline-variant":"#c2c6d4",
+          "on-primary-container":"#c8daff","surface-container-highest":"#e2e2e5","background":"#f9f9fc",
+          "outline":"#727783","secondary-fixed-dim":"#b2c7f0","on-primary":"#ffffff",
+          "inverse-primary":"#a9c7ff","on-primary-fixed":"#001b3d","on-secondary-container":"#475c80",
+          "surface-container-lowest":"#ffffff","tertiary-fixed":"#ffdbcb","primary-fixed-dim":"#a9c7ff",
+          "surface-container-low":"#f3f3f6","error":"#ba1a1a","on-surface":"#1a1c1e",
+          "on-primary-fixed-variant":"#00468c","on-tertiary":"#ffffff","primary":"#00478d",
+          "on-surface-variant":"#424752","surface-container":"#eeeef0","inverse-on-surface":"#f0f0f3",
+          "on-background":"#1a1c1e","tertiary-container":"#9f4300","on-tertiary-container":"#ffcfb9",
+          "on-tertiary-fixed":"#341100","secondary-container":"#c0d5ff","surface-dim":"#dadadc",
+          "secondary":"#4a5f83","error-container":"#ffdad6","on-secondary-fixed-variant":"#32476a",
+          "primary-container":"#005eb8","surface":"#f9f9fc","inverse-surface":"#2f3133",
+          "tertiary-fixed-dim":"#ffb691","on-tertiary-fixed-variant":"#793100","tertiary":"#793100",
+          "on-error":"#ffffff","surface-bright":"#f9f9fc"
+        },
+        borderRadius: { DEFAULT:"0.125rem", lg:"0.25rem", xl:"0.5rem", full:"0.75rem" },
+        fontFamily: { headline:["Inter"], body:["Inter"], label:["Public Sans"] }
+      }
+    }
+  }
+  </script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#f9f9fc;font-family:'Inter',sans-serif;color:#1a1c1e;}
+    .screen{display:none;min-height:100dvh;flex-direction:column;}
+    .screen.active{display:flex;}
+    .tab-content{display:none;flex-direction:column;flex:1;overflow-y:auto;}
+    .tab-content.active-tab{display:flex;}
+    .tab-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;min-height:56px;gap:2px;color:#424752;font-family:'Public Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;border:none;background:none;padding:4px 2px;}
+    .tab-btn.active{color:#00478d;}
+    .tab-btn svg{width:22px;height:22px;}
+    .inp{width:100%;border:1.5px solid #c2c6d4;border-radius:.5rem;padding:13px 14px;font-size:15px;background:#fff;color:#1a1c1e;outline:none;min-height:48px;-webkit-appearance:none;appearance:none;font-family:'Inter',sans-serif;}
+    .inp:focus{border-color:#00478d;}
+    select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23424752' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;}
+    .btn-p{width:100%;background:#00478d;color:#fff;border:none;border-radius:.5rem;padding:14px;font-size:15px;font-weight:600;cursor:pointer;min-height:48px;font-family:'Inter',sans-serif;display:block;text-align:center;}
+    .btn-p:hover{background:#005eb8;}
+    .btn-s{width:100%;background:#fff;color:#00478d;border:1.5px solid #c2c6d4;border-radius:.5rem;padding:13px;font-size:15px;font-weight:500;cursor:pointer;min-height:48px;font-family:'Inter',sans-serif;display:block;text-align:center;}
+    .btn-s:hover{background:#f3f3f6;}
+    .card{background:#fff;border:1px solid #c2c6d4;border-radius:.75rem;padding:16px;margin-bottom:12px;}
+    .step-c{width:28px;height:28px;border-radius:50%;background:#00478d;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;font-family:'Public Sans',sans-serif;}
+    .alert-e{background:#ffdad6;color:#93000a;border-radius:.5rem;padding:10px 14px;font-size:14px;margin-bottom:10px;}
+    .alert-s{background:#d6e3ff;color:#001b3d;border-radius:.5rem;padding:10px 14px;font-size:14px;margin-bottom:10px;}
+    .alert-w{background:#fff3cd;color:#7a5800;border-radius:.5rem;padding:10px 14px;font-size:14px;margin-bottom:10px;}
+    .pharm-result{padding:12px 14px;border-bottom:1px solid #eeeef0;cursor:pointer;font-size:14px;color:#1a1c1e;}
+    .pharm-result:hover{background:#f3f3f6;}
+    .pharm-result:last-child{border-bottom:none;}
+    .pharm-tag{display:inline-flex;align-items:center;gap:6px;background:#c0d5ff;color:#001b3d;border-radius:.75rem;padding:4px 10px;font-size:13px;font-weight:500;margin:3px;font-family:'Public Sans',sans-serif;}
+    .pharm-tag button{background:none;border:none;cursor:pointer;color:#32476a;font-size:16px;line-height:1;padding:0;}
+    .hist-item{padding:12px 0;border-bottom:1px solid #eeeef0;}
+    .hist-item:last-child{border-bottom:none;}
+    .lbl{display:block;font-size:13px;font-weight:500;color:#424752;margin-bottom:6px;font-family:'Public Sans',sans-serif;}
+    .section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+    .section-title h2{font-size:15px;font-weight:600;color:#1a1c1e;font-family:'Inter',sans-serif;}
+    a{color:#00478d;text-decoration:none;}
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ LOGIN ═══════════ -->
+<div id="screen-login" class="screen active">
+  <div style="background:#00478d;padding:48px 24px 36px;text-align:center;">
+    <div style="width:56px;height:56px;background:rgba(255,255,255,.15);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div style="font-size:30px;font-weight:700;color:#fff;letter-spacing:-0.5px;font-family:'Inter',sans-serif;">MedsNear</div>
+    <div style="font-size:14px;color:rgba(255,255,255,.7);margin-top:4px;font-family:'Public Sans',sans-serif;">Agent Portal</div>
+  </div>
+  <div style="flex:1;padding:24px 20px;max-width:440px;width:100%;margin:0 auto;">
+    <div class="card" style="margin-top:8px;">
+      <h2 style="font-size:18px;font-weight:600;color:#1a1c1e;margin-bottom:4px;font-family:'Inter',sans-serif;">Welcome back</h2>
+      <p style="font-size:13px;color:#424752;margin-bottom:18px;font-family:'Public Sans',sans-serif;">Sign in to your agent account</p>
+      <div id="login-alert"></div>
+      <div style="margin-bottom:14px;"><label class="lbl" for="login-email">Email address</label><input id="login-email" type="email" class="inp" placeholder="you@example.com" autocomplete="email" /></div>
+      <div style="margin-bottom:18px;"><label class="lbl" for="login-password">Password</label><input id="login-password" type="password" class="inp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" /></div>
+      <button class="btn-p" onclick="doLogin()">Log In</button>
+    </div>
+    <p style="text-align:center;font-size:14px;color:#424752;margin-top:16px;font-family:'Public Sans',sans-serif;">New agent? <a href="#" onclick="showScreen('screen-register')" style="color:#00478d;font-weight:600;">Create account</a></p>
+  </div>
+</div>
+
+<!-- ═══════════ REGISTER ═══════════ -->
+<div id="screen-register" class="screen">
+  <div style="background:#00478d;padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;">
+    <button onclick="showScreen('screen-login')" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </button>
+    <h1 style="font-size:18px;font-weight:600;color:#fff;font-family:'Inter',sans-serif;">Create Agent Account</h1>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px 16px 40px;max-width:440px;width:100%;margin:0 auto;">
+    <div id="reg-alert"></div>
+
+    <!-- Step 1 -->
+    <div class="card">
+      <div class="section-title"><div class="step-c">1</div><h2>Personal Information</h2></div>
+      <div style="margin-bottom:12px;"><label class="lbl">Full Name *</label><input id="reg-name" type="text" class="inp" placeholder="As on your ID document" /></div>
+      <div style="margin-bottom:12px;"><label class="lbl">Phone Number *</label><input id="reg-phone" type="tel" class="inp" placeholder="08012345678" /></div>
+      <div style="margin-bottom:12px;"><label class="lbl">Email Address *</label><input id="reg-email" type="email" class="inp" placeholder="you@example.com" /></div>
+      <div><label class="lbl">Password *</label><input id="reg-password" type="password" class="inp" placeholder="Min. 6 characters" /></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="card">
+      <div class="section-title"><div class="step-c">2</div><h2>Location</h2></div>
+      <div style="margin-bottom:12px;"><label class="lbl">State *</label><select id="reg-state" class="inp" onchange="populateLGA('reg-state','reg-lga')"><option value="">Select state…</option></select></div>
+      <div style="margin-bottom:12px;"><label class="lbl">Local Government Area *</label><select id="reg-lga" class="inp"><option value="">Select LGA…</option></select></div>
+      <div><label class="lbl">Home Address (as on ID) *</label><textarea id="reg-id-address" class="inp" rows="2" placeholder="Street, area, city…" style="min-height:72px;resize:none;"></textarea></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="card">
+      <div class="section-title"><div class="step-c">3</div><h2>Pharmacies You Cover</h2></div>
+      <p style="font-size:13px;color:#424752;margin-bottom:12px;font-family:'Public Sans',sans-serif;">Add pharmacies you'll collect inventory from. You can add more later.</p>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <input id="pharm-input" type="text" class="inp" placeholder="e.g. HealthPlus Pharmacy" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addPharmacyTag()}" />
+        <button onclick="addPharmacyTag()" class="btn-s" style="width:auto;padding:0 18px;flex-shrink:0;">Add</button>
+      </div>
+      <div id="pharmacy-tags" style="min-height:28px;"></div>
+      <p id="pharmacy-tags-empty" style="font-size:13px;color:#727783;margin-top:4px;font-family:'Public Sans',sans-serif;">No pharmacies added yet.</p>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="card">
+      <div class="section-title"><div class="step-c">4</div><h2>Consent Form</h2></div>
+      <p style="font-size:13px;color:#424752;margin-bottom:14px;font-family:'Public Sans',sans-serif;">Download the consent form, get it signed by each pharmacy, then upload the signed copy.</p>
+      <a href="/consent-form" target="_blank" class="btn-s" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;text-decoration:none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Consent Form
+      </a>
+      <label class="lbl">Upload Signed Consent Form</label>
+      <input id="reg-consent" type="file" accept="image/*,application/pdf" class="inp" style="padding:10px;" onchange="previewFile('reg-consent','consent-preview')" />
+      <div id="consent-preview" style="margin-top:8px;"></div>
+    </div>
+
+    <button class="btn-p" onclick="doRegister()">Submit Registration</button>
+    <p style="text-align:center;font-size:13px;color:#727783;margin-top:12px;font-family:'Public Sans',sans-serif;">After submitting, upload your ID to complete verification.</p>
+  </div>
+</div>
+
+<!-- ═══════════ MAIN APP ═══════════ -->
+<div id="screen-app" class="screen">
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="tab-content active-tab">
+      <div style="background:#00478d;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <p style="font-size:11px;color:rgba(255,255,255,.65);font-family:'Public Sans',sans-serif;text-transform:uppercase;letter-spacing:.5px;">Agent Portal</p>
+          <h1 id="agent-name-header" style="font-size:20px;font-weight:700;color:#fff;font-family:'Inter',sans-serif;margin-top:2px;">—</h1>
+        </div>
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;padding-bottom:24px;">
+        <div id="dash-alert"></div>
+        <div id="verify-banner" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:.75rem;padding:14px 16px;border-left:4px solid #793100;">
+          <p style="font-size:13px;font-weight:600;color:#341100;font-family:'Public Sans',sans-serif;">Identity not verified</p>
+          <p style="font-size:12px;color:#341100;opacity:.8;margin-top:2px;font-family:'Public Sans',sans-serif;">Complete ID verification to unlock full earning potential.</p>
+          <button onclick="switchTab('verify')" style="margin-top:8px;font-size:12px;font-weight:600;color:#793100;background:none;border:none;cursor:pointer;font-family:'Public Sans',sans-serif;text-decoration:underline;">Verify now →</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="card" style="margin-bottom:0;">
+            <p style="font-size:11px;font-weight:500;color:#424752;text-transform:uppercase;letter-spacing:.5px;font-family:'Public Sans',sans-serif;">Uploads</p>
+            <p id="stat-uploads" style="font-size:32px;font-weight:700;color:#00478d;font-family:'Inter',sans-serif;margin:4px 0 2px;">—</p>
+            <p style="font-size:12px;color:#727783;font-family:'Public Sans',sans-serif;">This month</p>
+          </div>
+          <div class="card" style="margin-bottom:0;">
+            <p style="font-size:11px;font-weight:500;color:#424752;text-transform:uppercase;letter-spacing:.5px;font-family:'Public Sans',sans-serif;">Earnings</p>
+            <p id="stat-earnings" style="font-size:32px;font-weight:700;color:#00478d;font-family:'Inter',sans-serif;margin:4px 0 2px;">—</p>
+            <p style="font-size:12px;color:#727783;font-family:'Public Sans',sans-serif;">Projected</p>
+          </div>
+        </div>
+        <div class="card" style="background:#005eb8;border-color:#005eb8;margin-bottom:0;">
+          <p style="font-size:11px;font-weight:600;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.5px;font-family:'Public Sans',sans-serif;margin-bottom:8px;">Payout Info</p>
+          <div style="display:flex;justify-content:space-between;">
+            <div><p style="font-size:12px;color:rgba(255,255,255,.7);font-family:'Public Sans',sans-serif;">Rate/upload</p><p style="font-size:18px;font-weight:700;color:#fff;font-family:'Inter',sans-serif;">₦<span id="stat-rate">—</span></p></div>
+            <div style="text-align:right;"><p style="font-size:12px;color:rgba(255,255,255,.7);font-family:'Public Sans',sans-serif;">Bonus</p><p style="font-size:18px;font-weight:700;color:#fff;font-family:'Inter',sans-serif;">₦<span id="stat-bonus">—</span></p></div>
+          </div>
+          <p style="font-size:11px;color:rgba(255,255,255,.6);margin-top:8px;font-family:'Public Sans',sans-serif;">50+ uploads = ₦1,000 bonus · 100+ = ₦2,000 bonus</p>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+          <h2 style="font-size:15px;font-weight:600;color:#1a1c1e;margin-bottom:12px;font-family:'Inter',sans-serif;">Recent Uploads</h2>
+          <div id="recent-uploads"><p style="font-size:14px;color:#727783;font-family:'Public Sans',sans-serif;">Loading…</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPLOAD -->
+    <div id="tab-upload" class="tab-content">
+      <div style="background:#00478d;padding:16px 20px;">
+        <h1 style="font-size:20px;font-weight:700;color:#fff;font-family:'Inter',sans-serif;">Upload Inventory</h1>
+        <p style="font-size:13px;color:rgba(255,255,255,.7);margin-top:2px;font-family:'Public Sans',sans-serif;">Record drug availability at a pharmacy</p>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;padding-bottom:24px;">
+        <div id="upload-alert"></div>
+        <div class="card" id="step-pharmacy" style="margin-bottom:0;">
+          <h2 style="font-size:15px;font-weight:600;color:#1a1c1e;margin-bottom:12px;font-family:'Inter',sans-serif;">Select Pharmacy</h2>
+          <input id="pharmacy-search" type="text" class="inp" placeholder="Search pharmacy name…" oninput="searchPharmacies()" autocomplete="off" />
+          <div id="pharmacy-results" style="margin-top:8px;border:1px solid #c2c6d4;border-radius:.5rem;overflow:hidden;display:none;"></div>
+          <div id="selected-pharmacy" style="display:none;margin-top:10px;background:#c0d5ff;border-radius:.5rem;padding:12px 14px;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+              <div><p id="sel-pharm-name" style="font-size:14px;font-weight:600;color:#001b3d;font-family:'Inter',sans-serif;"></p><p id="sel-pharm-addr" style="font-size:12px;color:#32476a;margin-top:2px;font-family:'Public Sans',sans-serif;"></p></div>
+              <button onclick="clearPharmacy()" style="background:none;border:none;cursor:pointer;color:#32476a;flex-shrink:0;padding:2px;" aria-label="Clear">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          <button onclick="showAddPharmacy()" class="btn-s" style="margin-top:12px;font-size:14px;">+ Add new pharmacy</button>
+          <div id="add-pharmacy-form" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid #eeeef0;display:flex;flex-direction:column;gap:10px;">
+            <p style="font-size:14px;font-weight:600;color:#1a1c1e;font-family:'Inter',sans-serif;">New Pharmacy</p>
+            <div><label class="lbl">Name *</label><input id="np-name" type="text" class="inp" /></div>
+            <div><label class="lbl">Address *</label><input id="np-address" type="text" class="inp" /></div>
+            <div><label class="lbl">State</label><select id="np-state" class="inp" onchange="populateLGA('np-state','np-lga')"><option value="">Select state…</option></select></div>
+            <div><label class="lbl">LGA</label><select id="np-lga" class="inp"><option value="">Select LGA…</option></select></div>
+            <div><label class="lbl">Phone (optional)</label><input id="np-phone" type="tel" class="inp" /></div>
+            <div style="display:flex;gap:8px;"><button onclick="addPharmacy()" class="btn-p" style="flex:1;">Save</button><button onclick="document.getElementById('add-pharmacy-form').style.display='none'" class="btn-s" style="flex:1;">Cancel</button></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+          <h2 style="font-size:15px;font-weight:600;color:#1a1c1e;margin-bottom:12px;font-family:'Inter',sans-serif;">Drug Details</h2>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div><label class="lbl">Drug Name *</label><input id="drug-name" type="text" class="inp" placeholder="e.g. Amoxicillin 500mg" /></div>
+            <div><label class="lbl">Brand / Manufacturer</label><input id="drug-brand" type="text" class="inp" placeholder="e.g. Emzor" /></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div><label class="lbl">Price (₦) *</label><input id="drug-price" type="number" min="0" class="inp" placeholder="0.00" /></div>
+              <div><label class="lbl">Quantity *</label><input id="drug-qty" type="number" min="0" class="inp" placeholder="0" /></div>
+            </div>
+            <div><label class="lbl">Expiry Date</label><input id="drug-expiry" type="date" class="inp" /></div>
+            <div>
+              <label class="lbl">Photo (optional)</label>
+              <input id="drug-photo" type="file" accept="image/*" capture="environment" class="inp" style="padding:10px;" onchange="previewPhoto()" />
+              <img id="photo-preview" src="" alt="" style="display:none;width:100%;max-height:180px;object-fit:cover;border-radius:.5rem;margin-top:8px;" />
+            </div>
+            <button class="btn-p" onclick="submitInventory()">Submit Upload</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VERIFY -->
+    <div id="tab-verify" class="tab-content">
+      <div style="background:#00478d;padding:16px 20px;">
+        <h1 style="font-size:20px;font-weight:700;color:#fff;font-family:'Inter',sans-serif;">Identity Verification</h1>
+        <p style="font-size:13px;color:rgba(255,255,255,.7);margin-top:2px;font-family:'Public Sans',sans-serif;">Verify your identity to unlock full payouts</p>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;padding-bottom:24px;">
+        <div id="verify-alert"></div>
+        <div id="verify-status-card" class="card" style="margin-bottom:0;display:flex;align-items:center;gap:12px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:#eeeef0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#424752" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div><p style="font-size:14px;font-weight:600;color:#1a1c1e;font-family:'Inter',sans-serif;">Not Verified</p><p style="font-size:12px;color:#424752;font-family:'Public Sans',sans-serif;">Submit your ID documents below.</p></div>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+          <div class="section-title"><div class="step-c">1</div><h2>Upload ID Document</h2></div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div><label class="lbl">Document Type *</label>
+              <select id="doc-type" class="inp">
+                <option value="">Select type…</option>
+                <option value="nin">NIN (National ID)</option>
+                <option value="drivers_licence">Driver's Licence</option>
+                <option value="passport">International Passport</option>
+                <option value="voters_card">Voter's Card (PVC)</option>
+              </select>
+            </div>
+            <div><label class="lbl">Document Number *</label><input id="doc-number" type="text" class="inp" placeholder="Enter ID number" /></div>
+            <div><label class="lbl">Address on Document *</label><textarea id="doc-address" class="inp" rows="2" placeholder="Address as it appears on your ID" style="min-height:72px;resize:none;"></textarea></div>
+            <div>
+              <label class="lbl">Upload Document (Photo or PDF) *</label>
+              <input id="doc-file" type="file" accept="image/*,application/pdf" class="inp" style="padding:10px;" onchange="previewFile('doc-file','doc-file-preview')" />
+              <div id="doc-file-preview" style="margin-top:8px;"></div>
+            </div>
+            <button class="btn-p" onclick="submitVerification()">Submit for Verification</button>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:0;">
+          <div class="section-title"><div class="step-c">2</div><h2>Consent Form</h2></div>
+          <p style="font-size:13px;color:#424752;margin-bottom:12px;font-family:'Public Sans',sans-serif;">Download, get signed by pharmacy, then upload here.</p>
+          <a href="/consent-form" target="_blank" class="btn-s" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;text-decoration:none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Consent Form
+          </a>
+          <label class="lbl">Upload Signed Consent</label>
+          <input id="consent-file" type="file" accept="image/*,application/pdf" class="inp" style="padding:10px;" onchange="previewFile('consent-file','consent-file-preview')" />
+          <div id="consent-file-preview" style="margin-top:8px;"></div>
+          <button class="btn-s" style="margin-top:12px;" onclick="submitConsent()">Upload Consent Form</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="tab-history" class="tab-content">
+      <div style="background:#00478d;padding:16px 20px;">
+        <h1 style="font-size:20px;font-weight:700;color:#fff;font-family:'Inter',sans-serif;">Upload History</h1>
+        <p style="font-size:13px;color:rgba(255,255,255,.7);margin-top:2px;font-family:'Public Sans',sans-serif;">All your past inventory submissions</p>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px;padding-bottom:24px;">
+        <div class="card" style="margin-bottom:12px;">
+          <div id="history-list"><p style="font-size:14px;color:#727783;font-family:'Public Sans',sans-serif;">Loading…</p></div>
+        </div>
+        <div id="history-pagination" style="display:flex;gap:8px;justify-content:center;"></div>
+      </div>
+    </div>
+
+  </div><!-- end main content -->
+
+  <!-- TAB BAR -->
+  <nav style="background:#fff;border-top:1px solid #c2c6d4;display:flex;position:sticky;bottom:0;z-index:20;padding-bottom:env(safe-area-inset-bottom);">
+    <button id="tab-btn-dashboard" class="tab-btn active" onclick="switchTab('dashboard')" aria-label="Dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Home
+    </button>
+    <button id="tab-btn-upload" class="tab-btn" onclick="switchTab('upload')" aria-label="Upload">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Upload
+    </button>
+    <button id="tab-btn-verify" class="tab-btn" onclick="switchTab('verify')" aria-label="Verify">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Verify
+    </button>
+    <button id="tab-btn-history" class="tab-btn" onclick="switchTab('history')" aria-label="History">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      History
+    </button>
+    <button id="tab-btn-logout" class="tab-btn" onclick="doLogout()" aria-label="Logout">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Logout
+    </button>
+  </nav>
+</div>
+
+<script src="assets/nigeria-lga.js"></script>
+<script src="assets/agent.js"></script>
+</body>
+</html>

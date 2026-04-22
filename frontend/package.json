@@ -1,0 +1,17 @@
+{
+  "name": "medsnear-frontend",
+  "version": "1.0.0",
+  "description": "MedsNear frontend — Agent app + Admin dashboard",
+  "scripts": {
+    "dev": "npx serve . -p 8080",
+    "preview": "npx serve . -p 8080"
+  },
+  "devDependencies": {
+    "serve": "^14.2.1"
+  },
+  "notes": {
+    "agent-app": "Open /agent/index.html — mobile-first agent portal",
+    "admin-app": "Open /admin/index.html — admin dashboard",
+    "api": "All /api/* calls proxy to the backend (localhost:3000 in dev)"
+  }
+}
