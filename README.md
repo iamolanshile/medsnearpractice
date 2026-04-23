@@ -1,121 +1,206 @@
 # MedsNear
 
-Nigeria drug availability platform — agent inventory uploads + WhatsApp customer chatbot.
+**Find Your Medication. Anywhere in Nigeria.**
 
-## Project Structure
+MedsNear is a web platform + WhatsApp chatbot that connects Nigerians to nearby pharmacy drug availability, powered by independent field agents who collect and upload real-time pharmacy inventory.
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ and npm
+- MongoDB Atlas account (or local MongoDB)
+
+### Installation
+
+```bash
+# Install all dependencies
+npm run install:all
+
+# Or install separately
+npm run install:backend
+npm run install:frontend
+```
+
+### Environment Setup
+
+**Backend** (`backend/.env`):
+```env
+PORT=3000
+MONGODB_URI=mongodb+srv://username:password@cluster0.mongodb.net/medsnear?retryWrites=true&w=majority
+JWT_SECRET=your_jwt_secret_here
+```
+
+**Frontend** (`frontend/.env`):
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+### Running the App
+
+```bash
+# Terminal 1: Start backend
+npm run dev:backend
+
+# Terminal 2: Start frontend
+npm run dev:frontend
+```
+
+- **Backend**: http://localhost:3000
+- **Frontend**: http://localhost:5173
+
+---
+
+## 📁 Project Structure
 
 ```
 medsnear/
-├── backend/                  ← Node.js API server
+├── backend/                    # Node.js + Express + MongoDB
 │   ├── src/
-│   │   ├── index.js          ← Express entry point
-│   │   ├── lib/
-│   │   │   └── supabase.js   ← Supabase client
-│   │   ├── middleware/
-│   │   │   └── auth.js       ← JWT auth middleware
-│   │   ├── routes/
-│   │   │   ├── agent.js      ← Agent auth + inventory APIs
-│   │   │   ├── admin.js      ← Admin dashboard APIs
-│   │   │   └── whatsapp.js   ← WhatsApp webhook
-│   │   └── services/
-│   │       ├── inventory.js  ← Geo search logic
-│   │       ├── payout.js     ← Payout calculation
-│   │       └── whatsapp.js   ← Bot conversation state machine
-│   ├── scripts/
-│   │   └── create-admin.js   ← One-time admin seed script
-│   ├── supabase/
-│   │   ├── schema.sql        ← Full DB schema
-│   │   └── disable_rls.sql   ← Disable RLS for backend-only access
-│   ├── public/
-│   │   └── consent-form.html ← Downloadable pharmacy consent form
-│   ├── .env                  ← Environment variables (git-ignored)
-│   ├── .env.example          ← Env template
+│   │   ├── config/            # Database connection
+│   │   ├── models/            # Mongoose models
+│   │   ├── routes/            # API routes
+│   │   ├── middleware/        # Auth middleware
+│   │   └── services/          # Business logic
+│   ├── server.js              # Entry point
 │   └── package.json
 │
-├── frontend/                 ← Static HTML + Vanilla JS
-│   ├── agent/
-│   │   ├── index.html        ← Agent mobile app
-│   │   └── assets/
-│   │       ├── agent.js      ← Agent app logic
-│   │       └── nigeria-lga.js← All 36 states + LGAs data
-│   ├── admin/
-│   │   ├── index.html        ← Admin dashboard
-│   │   └── assets/
-│   │       └── admin.js      ← Admin dashboard logic
+├── frontend/                   # React 18 + Vite + Tailwind
+│   ├── src/
+│   │   ├── assets/            # Styles
+│   │   ├── components/        # Reusable components
+│   │   ├── context/           # React Context (Auth)
+│   │   ├── pages/             # Page components
+│   │   ├── services/          # API service
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── router.jsx
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── tailwind.config.js
 │   └── package.json
 │
-└── README.md
+└── package.json               # Root monorepo scripts
 ```
 
-## Quick Start
+---
 
-### 1. Backend
+## 🎯 Features
 
-```bash
-cd backend
-npm install
-cp .env.example .env
-# Fill in your Supabase + Twilio credentials in .env
-npm run dev
-```
+### For Patients (WhatsApp)
+- Search for medication by name
+- See nearby pharmacies with stock, price, and distance
+- Place orders and pay via bank transfer
+- Track delivery status
 
-Backend runs on `http://localhost:3000`
+### For Agents (Web Dashboard)
+- Upload pharmacy inventory (drug name, price, stock, expiry)
+- Track monthly uploads and earnings
+- Tiered payout system (₦150–₦200 per upload)
+- Flexible work schedule
 
-### 2. Frontend
+### For Admins (Web Dashboard)
+- View platform analytics
+- Manage agents and pharmacies
+- Monitor orders
+- Approve monthly payouts
 
-Open the HTML files directly in a browser, or serve them:
+---
 
-```bash
-cd frontend
-npx serve . -p 8080
-```
+## 🛠 Tech Stack
 
-- Agent app: `http://localhost:8080/agent/`
-- Admin dashboard: `http://localhost:8080/admin/`
+**Backend:**
+- Node.js + Express
+- MongoDB + Mongoose
+- JWT authentication
+- bcryptjs for password hashing
 
-> In production, point the frontend API calls to your deployed backend URL.
+**Frontend:**
+- React 18
+- Vite
+- Tailwind CSS
+- React Router
+- Axios
 
-## Supabase Setup
+---
 
-1. Create a project at [supabase.com](https://supabase.com)
-2. Run `backend/supabase/schema.sql` in the SQL editor
-3. Run `backend/supabase/disable_rls.sql` to disable RLS (backend controls access)
-4. Create two storage buckets:
-   - `medication-photos` (public)
-   - `agent-docs` (public)
-5. Copy your project URL + service role key into `backend/.env`
+## 🔐 Default Admin Setup
 
-## WhatsApp Setup (Twilio)
+On first run, create an admin account:
 
-Set your Twilio WhatsApp webhook to:
-```
-https://your-backend-domain.com/api/whatsapp/webhook
-```
+1. Go to http://localhost:5173/admin/login
+2. Click "First time? Create account"
+3. Enter email and password
+4. Login with your credentials
 
-## API Routes
+---
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/agent/register` | Agent registration |
-| POST | `/api/agent/login` | Agent login |
-| GET | `/api/agent/dashboard` | Agent stats + earnings |
-| GET/POST | `/api/agent/pharmacies` | Search / add pharmacy |
-| POST | `/api/agent/inventory` | Upload drug inventory |
-| POST | `/api/agent/verify` | Submit ID document |
-| POST | `/api/agent/consent` | Upload consent form |
-| POST | `/api/admin/setup` | First-time admin setup |
-| POST | `/api/admin/login` | Admin login |
-| GET | `/api/admin/analytics` | Platform stats |
-| GET | `/api/admin/orders` | All orders |
-| GET | `/api/admin/agents` | Agent management |
-| GET | `/api/admin/verifications` | ID verification queue |
-| GET | `/api/admin/payouts` | Monthly payout data |
-| GET | `/api/admin/settings` | Platform settings |
-| POST | `/api/whatsapp/webhook` | WhatsApp bot webhook |
+## 📝 API Endpoints
 
-## Payout Tiers
+### Agent Routes (`/api/agent`)
+- `POST /register` - Register new agent
+- `POST /login` - Agent login
+- `GET /dashboard` - Agent dashboard data
+- `GET /pharmacies` - Search pharmacies
+- `POST /pharmacies` - Add new pharmacy
+- `POST /inventory` - Upload inventory
+- `GET /inventory/history` - Upload history
 
-- ₦50 per upload (configurable in Settings)
-- ₦1,000 bonus at 50+ uploads/month
-- ₦2,000 bonus at 100+ uploads/month
-# medsnearpractice
+### Admin Routes (`/api/admin`)
+- `POST /setup` - First-time admin setup
+- `POST /login` - Admin login
+- `GET /analytics` - Platform analytics
+- `GET /agents` - List all agents
+- `PATCH /agents/:id` - Update agent status
+- `GET /orders` - List all orders
+- `GET /pharmacies` - List all pharmacies
+- `GET /payouts` - Monthly payout overview
+
+---
+
+## 🎨 Design System
+
+The app uses a consistent design system based on Material Design 3 principles:
+
+**Colors:**
+- Primary: `#00478d` (Blue)
+- Surface: `#f9f9fc` (Light gray)
+- On-surface: `#1a1c1e` (Dark gray)
+
+**Typography:**
+- Headings: Inter (Black, 900)
+- Body: Inter (Regular, 400–600)
+- Labels: Public Sans (Bold, 700)
+
+**Components:**
+- Buttons: `.btn-primary`, `.btn-outline`, `.btn-ghost`
+- Inputs: `.input-field`
+- Cards: `.card`
+- Badges: `.badge-green`, `.badge-yellow`, `.badge-red`, etc.
+
+---
+
+## 🚢 Deployment
+
+### Backend (Railway, Render, Heroku)
+1. Set environment variables
+2. Deploy from GitHub
+3. Ensure MongoDB connection string is correct
+
+### Frontend (Vercel, Netlify)
+1. Build: `npm run build`
+2. Deploy `frontend/dist` folder
+3. Set `VITE_API_URL` to your backend URL
+
+---
+
+## 📄 License
+
+© 2025 MedsNear. Made with care in Nigeria.
+
+---
+
+## 🤝 Contributing
+
+This is a private project. For questions or support, contact the development team.
