@@ -204,3 +204,4 @@ The app uses a consistent design system based on Material Design 3 principles:
 ## 🤝 Contributing
 
 This is a private project. For questions or support, contact the development team.
+# MedsnearWeb

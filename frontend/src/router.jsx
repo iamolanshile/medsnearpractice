@@ -3,11 +3,15 @@ import { useAuth } from './context/AuthContext'
 
 // Public pages
 import Landing from './pages/public/Landing'
+import SearchResults from './pages/public/SearchResults'
+import SearchResultsAuth from './pages/public/SearchResultsAuth'
+import OrderConfirmation from './pages/customer/OrderConfirmation'
 import AgentsPage from './pages/public/Agents'
 import HowItWorks from './pages/public/HowItWorks'
 import NotFound from './pages/public/NotFound'
 
 // Auth pages
+import AuthPage from './pages/auth/AuthPage'
 import AgentLogin from './pages/auth/AgentLogin'
 import AdminLogin from './pages/auth/AdminLogin'
 import AgentRegister from './pages/auth/AgentRegister'
@@ -21,6 +25,10 @@ import AgentProfile from './pages/agent/Profile'
 
 // Admin pages
 import AdminDashboard from './pages/admin/Dashboard'
+import AdminAuthLogs from './pages/admin/AuthLogs'
+import PaymentProof from './pages/customer/PaymentProof'
+import TrackOrder from './pages/customer/TrackOrder'
+import OrderHistory from './pages/customer/OrderHistory'
 
 // Layouts
 import PublicLayout from './components/layout/PublicLayout'
@@ -30,7 +38,11 @@ import AdminLayout from './components/layout/AdminLayout'
 function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth()
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>
-  if (!user) return <Navigate to={role === 'admin' ? '/admin/login' : '/agent/login'} replace />
+  if (!user) {
+    if (role === 'admin') return <Navigate to="/admin/login" replace />
+    if (role === 'agent') return <Navigate to="/agent/login" replace />
+    return <Navigate to="/signin" replace />
+  }
   if (user.role !== role) return <Navigate to="/" replace />
   return children
 }
@@ -41,6 +53,15 @@ export default function AppRouter() {
       {/* Public */}
       <Route element={<PublicLayout />}>
         <Route path="/" element={<Landing />} />
+        <Route path="/search" element={<SearchResults />} />
+        <Route path="/customer/search" element={<ProtectedRoute role="customer"><SearchResultsAuth /></ProtectedRoute>} />
+        <Route path="/customer/orders" element={<ProtectedRoute role="customer"><OrderHistory /></ProtectedRoute>} />
+        <Route path="/order" element={<ProtectedRoute role="customer"><OrderConfirmation /></ProtectedRoute>} />
+        <Route path="/payment-proof" element={<ProtectedRoute role="customer"><PaymentProof /></ProtectedRoute>} />
+        <Route path="/track-order" element={<ProtectedRoute role="customer"><TrackOrder /></ProtectedRoute>} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/signin" element={<AuthPage />} />
+        <Route path="/signup" element={<AuthPage />} />
         <Route path="/agents" element={<AgentsPage />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
       </Route>
@@ -64,6 +85,7 @@ export default function AppRouter() {
       <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="auth-logs" element={<AdminAuthLogs />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

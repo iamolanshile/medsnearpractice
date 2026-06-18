@@ -6,6 +6,7 @@ const Agent = require('../models/Agent')
 const AgentVerification = require('../models/AgentVerification')
 const Pharmacy = require('../models/Pharmacy')
 const Inventory = require('../models/Inventory')
+const AuthLog = require('../models/AuthLog')
 
 const router = express.Router()
 
@@ -28,14 +29,38 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
+    const authMeta = {
+      user_type: 'agent',
+      email: email?.toLowerCase?.() || null,
+      action: 'login',
+      ip: req.ip,
+      user_agent: req.get('User-Agent') || null,
+    }
+
     const agent = await Agent.findOne({ email: email.toLowerCase() })
-    if (!agent) return res.status(401).json({ error: 'Invalid credentials' })
-    if (agent.status !== 'active') return res.status(403).json({ error: `Account ${agent.status}. Contact support.` })
+    if (!agent) {
+      await AuthLog.create({ ...authMeta, status: 'failure', message: 'Agent not found' })
+      return res.status(401).json({ error: 'Invalid credentials' })
+    }
+
+    if (agent.status !== 'active') {
+      await AuthLog.create({ ...authMeta, status: 'failure', message: `Agent account ${agent.status}` })
+      return res.status(403).json({ error: `Account ${agent.status}. Contact support.` })
+    }
+
     const valid = await bcrypt.compare(password, agent.password_hash)
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' })
+    if (!valid) {
+      await AuthLog.create({ ...authMeta, status: 'failure', user_id: agent._id, message: 'Invalid password' })
+      return res.status(401).json({ error: 'Invalid credentials' })
+    }
+
     const token = jwt.sign({ id: agent._id, role: 'agent', name: agent.name }, process.env.JWT_SECRET, { expiresIn: '7d' })
+    await AuthLog.create({ ...authMeta, status: 'success', user_id: agent._id, message: 'Agent login successful' })
     res.json({ token, agent: { id: agent._id, name: agent.name, email: agent.email, region: agent.region, verification_status: agent.verification_status } })
-  } catch (e) { res.status(400).json({ error: e.message }) }
+  } catch (e) {
+    await AuthLog.create({ user_type: 'agent', action: 'login', status: 'failure', ip: req.ip, user_agent: req.get('User-Agent') || null, message: e.message })
+    res.status(400).json({ error: e.message })
+  }
 })
 
 // Dashboard
