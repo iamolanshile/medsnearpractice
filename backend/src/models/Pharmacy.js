@@ -6,6 +6,7 @@ const pharmacySchema = new mongoose.Schema({
   lga: String,
   state: String,
   phone: String,
+  status: { type: String, enum: ['active', 'inactive'], default: 'active' },
   lat: Number,
   lng: Number,
   added_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Agent' },

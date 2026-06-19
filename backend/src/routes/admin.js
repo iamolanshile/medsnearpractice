@@ -104,9 +104,48 @@ router.patch('/agents/:id', auth('admin'), async (req, res) => {
 // All pharmacies
 router.get('/pharmacies', auth('admin'), async (req, res) => {
   try {
-    const pharmacies = await Pharmacy.find().sort({ createdAt: -1 })
+    const filter = {}
+    if (req.query.status) filter.status = req.query.status
+    const pharmacies = await Pharmacy.find(filter).sort({ createdAt: -1 })
     res.json(pharmacies)
   } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+// Create pharmacy
+router.post('/pharmacies', auth('admin'), async (req, res) => {
+  try {
+    const { name, address, lga, state, phone } = req.body
+    if (!name || !address) return res.status(400).json({ error: 'Name and address are required' })
+    const pharmacy = await Pharmacy.create({ name, address, lga, state, phone, status: 'active', added_by: req.user.id })
+    res.json(pharmacy)
+  } catch (e) { res.status(400).json({ error: e.message }) }
+})
+
+// Update pharmacy
+router.patch('/pharmacies/:id', auth('admin'), async (req, res) => {
+  try {
+    const { name, address, lga, state, phone, status } = req.body
+    const updates = {}
+    if (name !== undefined) updates.name = name
+    if (address !== undefined) updates.address = address
+    if (lga !== undefined) updates.lga = lga
+    if (state !== undefined) updates.state = state
+    if (phone !== undefined) updates.phone = phone
+    if (status !== undefined) updates.status = status
+
+    const pharmacy = await Pharmacy.findByIdAndUpdate(req.params.id, updates, { new: true })
+    if (!pharmacy) return res.status(404).json({ error: 'Pharmacy not found' })
+    res.json(pharmacy)
+  } catch (e) { res.status(400).json({ error: e.message }) }
+})
+
+// Delete pharmacy
+router.delete('/pharmacies/:id', auth('admin'), async (req, res) => {
+  try {
+    const pharmacy = await Pharmacy.findByIdAndDelete(req.params.id)
+    if (!pharmacy) return res.status(404).json({ error: 'Pharmacy not found' })
+    res.json({ message: 'Pharmacy deleted.' })
+  } catch (e) { res.status(400).json({ error: e.message }) }
 })
 
 // All orders

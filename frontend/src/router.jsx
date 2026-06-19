@@ -26,6 +26,9 @@ import AgentProfile from './pages/agent/Profile'
 // Admin pages
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminAuthLogs from './pages/admin/AuthLogs'
+import AdminPharmacies from './pages/admin/Pharmacies'
+import AdminOrders from './pages/admin/Orders'
+import PaymentVerifications from './pages/admin/PaymentVerifications'
 import PaymentProof from './pages/customer/PaymentProof'
 import TrackOrder from './pages/customer/TrackOrder'
 import OrderHistory from './pages/customer/OrderHistory'
@@ -85,7 +88,10 @@ export default function AppRouter() {
       <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="orders" element={<AdminOrders />} />
+        <Route path="payment-verifications" element={<PaymentVerifications />} />
         <Route path="auth-logs" element={<AdminAuthLogs />} />
+        <Route path="pharmacies" element={<AdminPharmacies />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />

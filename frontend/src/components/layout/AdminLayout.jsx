@@ -26,6 +26,21 @@ export default function AdminLayout() {
           }>
             Dashboard
           </NavLink>
+          <NavLink to="/admin/orders" className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? 'bg-primary text-white' : 'text-on-surface-variant hover:bg-surface-low hover:text-on-surface'}`
+          }>
+            Orders
+          </NavLink>
+          <NavLink to="/admin/payment-verifications" className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? 'bg-primary text-white' : 'text-on-surface-variant hover:bg-surface-low hover:text-on-surface'}`
+          }>
+            Payment Verifications
+          </NavLink>
+          <NavLink to="/admin/pharmacies" className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? 'bg-primary text-white' : 'text-on-surface-variant hover:bg-surface-low hover:text-on-surface'}`
+          }>
+            Pharmacies
+          </NavLink>
           <NavLink to="/admin/auth-logs" className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? 'bg-primary text-white' : 'text-on-surface-variant hover:bg-surface-low hover:text-on-surface'}`
           }>
