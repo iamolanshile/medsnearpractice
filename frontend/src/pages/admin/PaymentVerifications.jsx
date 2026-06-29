@@ -185,7 +185,7 @@ export default function PaymentVerifications() {
                   return (
                     <tr key={order._id} className="hover:bg-surface-low transition-colors cursor-pointer" onClick={() => selectOrder(order)}>
                       <td className="px-6 py-5">
-                        <div className="font-semibold text-on-surface">#{order._id.slice(-6).toUpperCase()}</div>
+                        <div className="font-semibold text-on-surface">#MD-{order._id.slice(-6).toUpperCase()}-NG</div>
                         <div className="text-xs text-on-surface-variant mt-1">{new Date(order.createdAt).toLocaleString('en-NG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
                         <div className="mt-2 font-bold text-on-surface">{formatPrice(order.total_price)}</div>
                       </td>
@@ -251,7 +251,7 @@ export default function PaymentVerifications() {
             <div className="flex items-start justify-between gap-3 border-b border-outline/40 p-6">
               <div>
                 <p className="text-sm uppercase tracking-[0.18em] text-on-surface-variant mb-2">Verify Payment</p>
-                <h2 className="text-2xl font-black text-on-surface">Order {selectedOrder._id.slice(-6).toUpperCase()}</h2>
+                <h2 className="text-2xl font-black text-on-surface">Order #MD-{selectedOrder._id.slice(-6).toUpperCase()}-NG</h2>
               </div>
               <button type="button" className="rounded-full p-2 text-on-surface-variant hover:bg-surface-low" onClick={closePanel}>
                 <span className="material-symbols-outlined">close</span>

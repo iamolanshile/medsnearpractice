@@ -125,7 +125,7 @@ export default function OrderConfirmation() {
             <section className="bg-white rounded-3xl border border-outline-variant shadow-sm p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-headline-md text-headline-md font-bold text-on-surface">Delivery Address</h2>
-                <button type="button" onClick={() => navigate('/profile')} className="text-primary font-label-sm text-label-sm hover:underline flex items-center gap-1">
+                <button type="button" onClick={() => navigate('/customer/profile')} className="text-primary font-label-sm text-label-sm hover:underline flex items-center gap-1">
                   <span className="material-symbols-outlined text-sm">edit</span>
                   Change
                 </button>

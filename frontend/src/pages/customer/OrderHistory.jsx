@@ -287,17 +287,17 @@ export default function OrderHistory() {
               <h3 className="font-headline-sm text-headline-sm font-bold text-on-surface mb-3">Quick Actions</h3>
               <button
                 type="button"
-                onClick={() => navigate('/payment-proof')}
+                onClick={() => navigate('/customer/search')}
                 className="w-full rounded-3xl border border-outline-variant bg-white px-4 py-3 text-sm font-semibold text-on-surface hover:bg-surface-container transition-all"
               >
-                Upload payment proof
+                Search medications
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/track-order')}
-                className="mt-3 w-full rounded-3xl bg-primary px-4 py-3 text-sm font-semibold text-white hover:bg-primary-container transition-all"
+                onClick={() => navigate('/customer/profile')}
+                className="mt-3 w-full rounded-3xl border border-outline-variant bg-white px-4 py-3 text-sm font-semibold text-on-surface hover:bg-surface-container transition-all"
               >
-                Track a delivery
+                Update my profile
               </button>
             </div>
           </aside>

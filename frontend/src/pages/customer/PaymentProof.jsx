@@ -5,18 +5,28 @@ import api from '../../services/api'
 export default function PaymentProof() {
   const location = useLocation()
   const navigate = useNavigate()
-  const order = location.state?.order
-  const [file, setFile] = useState(null)
-  const [uploading, setUploading] = useState(false)
 
-  const { product, quantity = 1, subtotal = 0, total = 0 } = order || {}
+  // State shape from OrderConfirmation:
+  // { product, quantity, subtotal, total, order: createdOrder }
+  const order    = location.state?.order
+  const product  = location.state?.product
+  const quantity = location.state?.quantity ?? 1
+  const subtotal = location.state?.subtotal ?? 0
+  const total    = location.state?.total    ?? 0
+
   const orderId = order?._id || order?.id
+
+  const [file, setFile]         = useState(null)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     if (!orderId) {
       navigate('/customer/search', { replace: true })
     }
   }, [orderId, navigate])
+
+  // Show nothing while the redirect effect fires
+  if (!orderId) return null
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files?.[0]
@@ -70,8 +80,6 @@ export default function PaymentProof() {
   }
 
   if (!order?.product) return null
-
-
   return (
     <div className="min-h-screen bg-surface text-on-surface">
       <div className="bg-surface border-b border-outline-variant py-4 px-margin-mobile md:px-margin-desktop sticky top-16 z-30">

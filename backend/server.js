@@ -10,6 +10,7 @@ const connectDB = require('./src/config/database')
 const agentRoutes = require('./src/routes/agent')
 const adminRoutes = require('./src/routes/admin')
 const orderRoutes = require('./src/routes/orders')
+const customerRoutes = require('./src/routes/customers')
 
 const app = express()
 
@@ -33,6 +34,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 app.use('/api/agent', agentRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/orders', orderRoutes)
+app.use('/api/customers', customerRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', service: 'MedsNear', db: 'MongoDB' }))

@@ -101,9 +101,12 @@ export default function AdminAgents() {
             <span className="material-symbols-outlined">download</span>
             Export Performance Report
           </button>
-          <button className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-dark transition-all">
+          <button
+            onClick={() => setFilter('pending')}
+            className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-dark transition-all"
+          >
             <span className="material-symbols-outlined">person_add</span>
-            Approve New Agent
+            Pending Approvals {pendingCount > 0 && `(${pendingCount})`}
           </button>
         </div>
       </div>
@@ -163,7 +166,7 @@ export default function AdminAgents() {
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Region</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Status</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Monthly Uploads</th>
-                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Quality</th>
+                  <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider">Verification</th>
                   <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
@@ -186,8 +189,6 @@ export default function AdminAgents() {
                 ) : (
                   filteredAgents.map((agent) => {
                     const region = agent.region || `${agent.state || 'Unknown'}${agent.lga ? ` · ${agent.lga}` : ''}`
-                    const uploads = agent.status === 'active' ? 1240 : agent.status === 'pending' ? '--' : 210
-                    const quality = agent.status === 'active' ? '98%' : agent.status === 'pending' ? '—' : '64%'
                     return (
                       <tr key={agent._id} className="hover:bg-surface-low transition-colors bg-white">
                         <td className="px-6 py-5">
@@ -195,7 +196,7 @@ export default function AdminAgents() {
                             <div className="w-10 h-10 rounded-full bg-primary-container text-primary flex items-center justify-center font-bold">{agent.name?.split(' ').map((word) => word[0]).join('').slice(0, 2).toUpperCase()}</div>
                             <div>
                               <p className="font-semibold text-on-surface">{agent.name}</p>
-                              <p className="text-[10px] text-on-surface-variant">ID: {agent._id.slice(-6).toUpperCase()}</p>
+                              <p className="text-[10px] text-on-surface-variant">{agent.email}</p>
                             </div>
                           </div>
                         </td>
@@ -203,12 +204,13 @@ export default function AdminAgents() {
                         <td className="px-6 py-5">
                           <span className={STATUS_CLASSES[agent.status]}>{STATUS_LABELS[agent.status]}</span>
                         </td>
-                        <td className="px-6 py-5 font-semibold text-on-surface">{uploads}</td>
+                        <td className="px-6 py-5 font-semibold text-on-surface">
+                          {agent.status === 'pending' ? '—' : (agent.upload_count ?? '—')}
+                        </td>
                         <td className="px-6 py-5">
-                          <div className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-yellow-500 text-sm" style={{ fontVariationSettings: `'FILL' 1` }}>star</span>
-                            <span className="font-semibold text-on-surface">{quality}</span>
-                          </div>
+                          <span className={`text-sm font-semibold ${agent.verification_status === 'verified' ? 'text-green-700' : 'text-on-surface-variant'}`}>
+                            {agent.verification_status === 'verified' ? 'Verified' : agent.verification_status ?? '—'}
+                          </span>
                         </td>
                         <td className="px-6 py-5 text-right">
                           <div className="flex justify-end gap-2">
@@ -254,8 +256,11 @@ export default function AdminAgents() {
           <div className="p-4 border-t border-outline/40 bg-surface-container-low flex items-center justify-between">
             <span className="text-sm text-on-surface-variant">Showing {filteredAgents.length} of {agents.length} agents</span>
             <div className="flex gap-2">
-              <button className="rounded-full border border-outline/40 px-3 py-2 text-sm text-on-surface-variant hover:bg-surface-low transition-all">Previous</button>
-              <button className="rounded-full bg-primary px-3 py-2 text-sm font-semibold text-white">Next</button>
+              <button
+                disabled
+                className="rounded-full border border-outline/40 px-3 py-2 text-sm text-on-surface-variant hover:bg-surface-low transition-all disabled:opacity-40"
+              >Previous</button>
+              <span className="rounded-full bg-primary px-3 py-2 text-sm font-semibold text-white">1</span>
             </div>
           </div>
         </div>

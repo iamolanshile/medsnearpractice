@@ -18,7 +18,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'All required fields must be filled' })
     const hash = await bcrypt.hash(password, 10)
     const agent = await Agent.create({ name, phone, email: email.toLowerCase(), password_hash: hash, state, lga, region: state, id_address })
-    res.json({ message: 'Registration submitted. Await admin approval.', agent: { id: agent._id, name: agent.name, email: agent.email, status: agent.status } })
+    res.json({ message: 'Registration successful. You can now sign in.', agent: { id: agent._id, name: agent.name, email: agent.email, status: agent.status } })
   } catch (e) {
     if (e.code === 11000) return res.status(400).json({ error: 'Email already registered' })
     res.status(400).json({ error: e.message })
@@ -45,7 +45,12 @@ router.post('/login', async (req, res) => {
 
     if (agent.status !== 'active') {
       await AuthLog.create({ ...authMeta, status: 'failure', message: `Agent account ${agent.status}` })
-      return res.status(403).json({ error: `Account ${agent.status}. Contact support.` })
+      return res.status(403).json({
+        error: agent.status === 'pending'
+          ? 'Your account is pending verification. Please check back once an admin has approved your registration.'
+          : 'Your account has been suspended. Please contact support.',
+        code: agent.status === 'pending' ? 'ACCOUNT_PENDING' : 'ACCOUNT_SUSPENDED',
+      })
     }
 
     const valid = await bcrypt.compare(password, agent.password_hash)

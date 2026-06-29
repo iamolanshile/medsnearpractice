@@ -1,19 +1,21 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState } from 'react'
 
 const AuthContext = createContext(null)
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
+// Read user from localStorage synchronously at module load time.
+// This means user is never null on first render if they're already logged in.
+function readStoredUser() {
+  try {
     const token = localStorage.getItem('mn_token')
-    const userData = localStorage.getItem('mn_user')
-    if (token && userData) {
-      try { setUser(JSON.parse(userData)) } catch { /* ignore */ }
-    }
-    setLoading(false)
-  }, [])
+    const raw   = localStorage.getItem('mn_user')
+    if (token && raw) return JSON.parse(raw)
+  } catch { /* corrupted data — ignore */ }
+  return null
+}
+
+export function AuthProvider({ children }) {
+  // Initialize directly from localStorage — no useEffect delay, no loading state
+  const [user, setUser] = useState(() => readStoredUser())
 
   const login = (token, userData) => {
     localStorage.setItem('mn_token', token)
@@ -28,7 +30,8 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    // loading is always false — user is known synchronously on first render
+    <AuthContext.Provider value={{ user, loading: false, login, logout }}>
       {children}
     </AuthContext.Provider>
   )
