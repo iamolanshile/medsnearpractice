@@ -15,6 +15,14 @@ const orderSchema = new mongoose.Schema({
   },
   payment_confirmed: { type: Boolean, default: false },
   payment_reference: String,
+  payment_proof: {
+    filename: String,
+    original_name: String,
+    mime_type: String,
+    size: Number,
+    path: String,
+    uploaded_at: Date,
+  },
   delivery_address: String,
   notes: String,
 }, { timestamps: true })

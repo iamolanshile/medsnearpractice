@@ -6,7 +6,7 @@ import api from '../../services/api'
 export default function AdminLogin() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [setupForm, setSetupForm] = useState({ email: '', password: '' })
-  const [mode, setMode] = useState('login') // 'login' | 'setup'
+  const [mode, setMode] = useState('login')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
@@ -18,11 +18,13 @@ export default function AdminLogin() {
     setLoading(true)
     try {
       const data = await api.post('/admin/login', form)
-      login(data.token, { role: 'admin', email: form.email })
-      navigate('/admin/dashboard')
+      login(data.token, { role: 'admin', email: form.email, name: 'Admin' })
+      navigate('/admin/dashboard', { replace: true })
     } catch (err) {
       setError(err.error || 'Invalid credentials')
-    } finally { setLoading(false) }
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleSetup = async (e) => {
@@ -57,7 +59,17 @@ export default function AdminLogin() {
         </div>
 
         <div className="card p-6">
-          {error && <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700 mb-4">{error}</div>}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 mb-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] shrink-0">error</span>
+                <span>{error}</span>
+              </div>
+              <button type="button" onClick={() => setError('')} className="text-red-400 hover:text-red-600 shrink-0">
+                <span className="material-symbols-outlined text-[16px]">close</span>
+              </button>
+            </div>
+          )}
 
           {mode === 'login' ? (
             <form onSubmit={handleLogin} className="space-y-4">
@@ -67,7 +79,7 @@ export default function AdminLogin() {
               </div>
               <div>
                 <label className="label">Password</label>
-                <input required type="password" className="input-field" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                <input required type="password" autoComplete="current-password" className="input-field" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
               </div>
               <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-3 disabled:opacity-60">
                 {loading ? 'Signing in...' : 'Sign in'}
@@ -81,7 +93,7 @@ export default function AdminLogin() {
               </div>
               <div>
                 <label className="label">Password</label>
-                <input required type="password" className="input-field" placeholder="Min 8 characters" value={setupForm.password} onChange={(e) => setSetupForm({ ...setupForm, password: e.target.value })} />
+                <input required type="password" autoComplete="new-password" className="input-field" placeholder="Min 8 characters" value={setupForm.password} onChange={(e) => setSetupForm({ ...setupForm, password: e.target.value })} />
               </div>
               <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-3 disabled:opacity-60">
                 {loading ? 'Creating...' : 'Create account'}

@@ -10,6 +10,7 @@ const Inventory = require('../models/Inventory')
 const Order = require('../models/Order')
 const Payout = require('../models/Payout')
 const PlatformSetting = require('../models/PlatformSetting')
+const AuthLog = require('../models/AuthLog')
 
 const router = express.Router()
 
@@ -30,13 +31,33 @@ router.post('/setup', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
+    const authMeta = {
+      user_type: 'admin',
+      email: email?.toLowerCase?.() || null,
+      action: 'login',
+      ip: req.ip,
+      user_agent: req.get('User-Agent') || null,
+    }
+
     const admin = await Admin.findOne({ email: email.toLowerCase() })
-    if (!admin) return res.status(401).json({ error: 'Invalid credentials' })
+    if (!admin) {
+      await AuthLog.create({ ...authMeta, status: 'failure', message: 'Admin not found' })
+      return res.status(401).json({ error: 'Invalid credentials' })
+    }
+
     const valid = await bcrypt.compare(password, admin.password_hash)
-    if (!valid) return res.status(401).json({ error: 'Invalid credentials' })
+    if (!valid) {
+      await AuthLog.create({ ...authMeta, status: 'failure', user_id: admin._id, message: 'Invalid password' })
+      return res.status(401).json({ error: 'Invalid credentials' })
+    }
+
     const token = jwt.sign({ id: admin._id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1d' })
+    await AuthLog.create({ ...authMeta, status: 'success', user_id: admin._id, message: 'Admin login successful' })
     res.json({ token })
-  } catch (e) { res.status(400).json({ error: e.message }) }
+  } catch (e) {
+    await AuthLog.create({ user_type: 'admin', action: 'login', status: 'failure', ip: req.ip, user_agent: req.get('User-Agent') || null, message: e.message })
+    res.status(400).json({ error: e.message })
+  }
 })
 
 // Analytics
@@ -83,9 +104,48 @@ router.patch('/agents/:id', auth('admin'), async (req, res) => {
 // All pharmacies
 router.get('/pharmacies', auth('admin'), async (req, res) => {
   try {
-    const pharmacies = await Pharmacy.find().sort({ createdAt: -1 })
+    const filter = {}
+    if (req.query.status) filter.status = req.query.status
+    const pharmacies = await Pharmacy.find(filter).sort({ createdAt: -1 })
     res.json(pharmacies)
   } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+// Create pharmacy
+router.post('/pharmacies', auth('admin'), async (req, res) => {
+  try {
+    const { name, address, lga, state, phone } = req.body
+    if (!name || !address) return res.status(400).json({ error: 'Name and address are required' })
+    const pharmacy = await Pharmacy.create({ name, address, lga, state, phone, status: 'active', added_by: req.user.id })
+    res.json(pharmacy)
+  } catch (e) { res.status(400).json({ error: e.message }) }
+})
+
+// Update pharmacy
+router.patch('/pharmacies/:id', auth('admin'), async (req, res) => {
+  try {
+    const { name, address, lga, state, phone, status } = req.body
+    const updates = {}
+    if (name !== undefined) updates.name = name
+    if (address !== undefined) updates.address = address
+    if (lga !== undefined) updates.lga = lga
+    if (state !== undefined) updates.state = state
+    if (phone !== undefined) updates.phone = phone
+    if (status !== undefined) updates.status = status
+
+    const pharmacy = await Pharmacy.findByIdAndUpdate(req.params.id, updates, { new: true })
+    if (!pharmacy) return res.status(404).json({ error: 'Pharmacy not found' })
+    res.json(pharmacy)
+  } catch (e) { res.status(400).json({ error: e.message }) }
+})
+
+// Delete pharmacy
+router.delete('/pharmacies/:id', auth('admin'), async (req, res) => {
+  try {
+    const pharmacy = await Pharmacy.findByIdAndDelete(req.params.id)
+    if (!pharmacy) return res.status(404).json({ error: 'Pharmacy not found' })
+    res.json({ message: 'Pharmacy deleted.' })
+  } catch (e) { res.status(400).json({ error: e.message }) }
 })
 
 // All orders
@@ -191,6 +251,46 @@ router.get('/verifications', auth('admin'), async (req, res) => {
     const verifs = await AgentVerification.find(filter).populate('agent_id', 'name email phone state lga').sort({ createdAt: -1 })
     res.json(verifs)
   } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+router.get('/auth-logs', auth('admin'), async (req, res) => {
+  try {
+    const {
+      user_type,
+      action,
+      status,
+      email,
+      page = 1,
+      limit = 25,
+      start_date,
+      end_date,
+    } = req.query
+
+    const filter = {}
+    if (user_type) filter.user_type = user_type
+    if (action) filter.action = action
+    if (status) filter.status = status
+    if (email) filter.email = email.toLowerCase()
+    if (start_date || end_date) {
+      filter.createdAt = {}
+      if (start_date) filter.createdAt.$gte = new Date(start_date)
+      if (end_date) filter.createdAt.$lte = new Date(end_date)
+    }
+
+    const pageNumber = Math.max(1, parseInt(page, 10))
+    const pageSize = Math.min(100, Math.max(1, parseInt(limit, 10)))
+    const [data, total] = await Promise.all([
+      AuthLog.find(filter)
+        .sort({ createdAt: -1 })
+        .skip((pageNumber - 1) * pageSize)
+        .limit(pageSize),
+      AuthLog.countDocuments(filter),
+    ])
+
+    res.json({ data, total, page: pageNumber, limit: pageSize })
+  } catch (e) {
+    res.status(500).json({ error: e.message })
+  }
 })
 
 router.patch('/verifications/:agentId', auth('admin'), async (req, res) => {

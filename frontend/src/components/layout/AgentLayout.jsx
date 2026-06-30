@@ -1,80 +1,169 @@
+import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
 const navItems = [
-  { to: '/agent/dashboard', icon: '⊞', label: 'Dashboard' },
-  { to: '/agent/upload', icon: '↑', label: 'Upload' },
-  { to: '/agent/uploads', icon: '☰', label: 'My Uploads' },
-  { to: '/agent/earnings', icon: '₦', label: 'Earnings' },
-  { to: '/agent/profile', icon: '◯', label: 'Profile' },
+  { to: '/agent/dashboard',   label: 'Dashboard',    icon: 'dashboard',       end: true },
+  { to: '/agent/pharmacies',  label: 'Pharmacies',   icon: 'storefront',      end: true },
+  { to: '/agent/upload',      label: 'Upload',        icon: 'upload_file',     end: true },
+  { to: '/agent/uploads',     label: 'My Uploads',   icon: 'inventory_2',     end: true },
+  { to: '/agent/earnings',    label: 'Earnings',      icon: 'payments',        end: true },
+  { to: '/agent/profile',     label: 'Profile',       icon: 'manage_accounts', end: true },
 ]
+
+function NavItems({ onNavigate }) {
+  return (
+    <>
+      {navItems.map(({ to, label, icon, end }) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={end}
+          onClick={onNavigate}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              isActive
+                ? 'bg-primary text-white'
+                : 'text-on-surface-variant hover:bg-surface-low hover:text-on-surface'
+            }`
+          }
+        >
+          <span className="material-symbols-outlined text-[20px]">{icon}</span>
+          {label}
+        </NavLink>
+      ))}
+    </>
+  )
+}
+
+function VerificationBadge({ status }) {
+  if (status === 'verified')
+    return <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">Verified</span>
+  if (status === 'pending')
+    return <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full">Pending</span>
+  return <span className="text-[10px] font-bold text-on-surface-variant/60 bg-surface-high px-1.5 py-0.5 rounded-full">Unverified</span>
+}
 
 export default function AgentLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const handleLogout = () => { logout(); navigate('/agent/login') }
 
+  const initials = user?.name?.split(' ').map((p) => p[0]).join('').slice(0, 2).toUpperCase() || 'AG'
+
+  const IdentityBlock = () => (
+    <div className="px-4 py-3 border-b border-outline/20 flex items-center gap-3">
+      <div className="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-sm shrink-0">
+        {initials}
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold text-on-surface truncate">{user?.name || 'Agent'}</p>
+        <VerificationBadge status={user?.verification_status} />
+      </div>
+    </div>
+  )
+
+  const LogoutButton = () => (
+    <button
+      onClick={handleLogout}
+      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-red-50 hover:text-error transition-all"
+    >
+      <span className="material-symbols-outlined text-[20px]">logout</span>
+      Log out
+    </button>
+  )
+
   return (
     <div className="min-h-screen bg-surface flex">
-      {/* Sidebar */}
-      <aside className="hidden lg:flex w-60 flex-col bg-white border-r border-outline/30 sticky top-0 h-screen">
-        <div className="p-5 border-b border-outline/20">
+
+      {/* ── Desktop sidebar ── */}
+      <aside className="hidden lg:flex w-56 flex-col bg-white border-r border-outline/20 sticky top-0 h-screen">
+        {/* Brand */}
+        <div className="px-5 py-4 border-b border-outline/20">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-primary rounded-md flex items-center justify-center">
-              <span className="text-white font-black text-xs">M</span>
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-white font-black text-sm">M</span>
             </div>
-            <span className="font-black text-primary text-base tracking-tight">MedsNear</span>
+            <div>
+              <p className="font-black text-primary text-sm tracking-tight leading-none">MedsNear</p>
+              <p className="text-[9px] text-on-surface-variant/60 uppercase tracking-widest">Agent Portal</p>
+            </div>
           </div>
-          <p className="text-[10px] uppercase tracking-widest font-bold text-on-surface-variant/60 mt-1 font-label">Agent Portal</p>
         </div>
 
-        <nav className="flex-1 p-3 space-y-0.5">
-          {navItems.map(({ to, label }) => (
-            <NavLink key={to} to={to} className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? 'bg-primary text-white' : 'text-on-surface-variant hover:bg-surface-low hover:text-on-surface'}`
-            }>
-              <span className="font-semibold">{label}</span>
-            </NavLink>
-          ))}
+        {/* Agent identity */}
+        {user && <IdentityBlock />}
+
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+          <NavItems />
         </nav>
 
-        <div className="p-4 border-t border-outline/20">
-          <p className="text-xs font-semibold text-on-surface truncate mb-2">{user?.name}</p>
-          <button onClick={handleLogout} className="text-xs text-on-surface-variant hover:text-error transition-colors font-label font-bold uppercase tracking-wider">
-            Logout
-          </button>
+        {/* Bottom actions */}
+        <div className="px-3 pb-4 space-y-0.5 border-t border-outline/20 pt-3">
+          <LogoutButton />
         </div>
       </aside>
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Mobile header */}
-        <header className="lg:hidden sticky top-0 z-40 bg-white border-b border-outline/30 px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-primary rounded-md flex items-center justify-center">
-              <span className="text-white font-black text-xs">M</span>
-            </div>
-            <span className="font-black text-primary text-base tracking-tight">MedsNear</span>
+      {/* ── Mobile header ── */}
+      <div className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 bg-white border-b border-outline/20 flex items-center justify-between px-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-white font-black text-sm">M</span>
           </div>
-          <span className="text-xs font-semibold text-on-surface-variant">{user?.name}</span>
-        </header>
-
-        <main className="flex-1 p-4 md:p-6 pb-24 lg:pb-6">
-          <Outlet />
-        </main>
-
-        {/* Mobile bottom nav */}
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-outline/30 flex justify-around px-2 py-2 z-40">
-          {navItems.slice(0, 5).map(({ to, label }) => (
-            <NavLink key={to} to={to} className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg transition-colors ${isActive ? 'text-primary' : 'text-on-surface-variant'}`
-            }>
-              <span className="text-[9px] font-bold uppercase tracking-wider font-label">{label}</span>
-            </NavLink>
-          ))}
-        </nav>
+          <span className="font-black text-primary text-sm tracking-tight">MedsNear</span>
+        </div>
+        <button
+          onClick={() => setDrawerOpen(true)}
+          aria-label="Open navigation menu"
+          className="p-2 rounded-lg text-on-surface-variant hover:bg-surface-high transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
       </div>
+
+      {/* ── Mobile drawer ── */}
+      {drawerOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex" role="dialog" aria-modal="true">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setDrawerOpen(false)} />
+          <div className="relative w-64 flex flex-col bg-white h-full shadow-xl">
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-outline/20 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                  <span className="text-white font-black text-sm">M</span>
+                </div>
+                <div>
+                  <p className="font-black text-primary text-sm tracking-tight leading-none">MedsNear</p>
+                  <p className="text-[9px] text-on-surface-variant/60 uppercase tracking-widest">Agent Portal</p>
+                </div>
+              </div>
+              <button onClick={() => setDrawerOpen(false)} aria-label="Close menu"
+                className="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-high transition-colors">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {user && <IdentityBlock />}
+            <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+              <NavItems onNavigate={() => setDrawerOpen(false)} />
+            </nav>
+            <div className="px-3 pb-4 space-y-0.5 border-t border-outline/20 pt-3">
+              <LogoutButton />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Page content ── */}
+      <main className="flex-1 p-6 lg:pt-6 pt-20 overflow-y-auto">
+        <Outlet />
+      </main>
     </div>
   )
 }
